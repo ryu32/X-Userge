@@ -155,5 +155,9 @@ async def handle_afk_outgoing(message: Message) -> None:
 AFK_REASONS = (
     "#AFK\n Maaf Saya Sedang OFFLINE!!\n>>>>>",
     "#AFK\n Maaf Saya Sedang OFFLINE!!\n<<<<<",
+    "#AFK\n Maaf Saya Sedang OFFLINE!!",
+    "#AFK\n Maaf Saya Sedang OFFLINE!!",
+    "#AFK\n Maaf Saya Sedang OFFLINE!!",
     "#AFK\n Maaf Saya Sedang OFFLINE!!, \
+    and address and I will stalk you later. :P",
     "#AFK\n Saya Sedang OFFLINE ANJENG!!")
