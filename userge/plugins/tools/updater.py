@@ -18,18 +18,20 @@ LOG = userge.getLogger(__name__)
 CHANNEL = userge.getCLogger(__name__)
 
 
-@userge.on_cmd("update", about={
-    'header': "Check Updates or Update Userge",
-    'flags': {
-        '-pull': "pull updates",
-        '-push': "push updates to heroku",
-        '-master': "select master branch",
-        '-beta': "select beta branch"},
-    'usage': "{tr}update : check updates from master branch\n"
-             "{tr}update -[branch_name] : check updates from any branch\n"
-             "add -pull if you want to pull updates\n"
-             "add -push if you want to push updates to heroku",
-    'examples': "{tr}update -beta -pull -push"}, del_pre=True, allow_channels=False)
+@userge.on_cmd("update",
+               about={'header': "Check Updates or Update X-Userge",
+                      'flags': {'-pull': "pull updates",
+                                '-push': "push updates to heroku",
+                                '-master': "select master branch",
+                                '-beta': "select beta branch",
+                                '-alpha': "select alpha branch"},
+                      'usage': "{tr}update : check updates from default branch\n"
+                      "{tr}update -[branch_name] : check updates from any branch\n"
+                      "add -pull if you want to pull updates\n"
+                      "add -push if you want to push updates to heroku",
+                      'examples': "{tr}update -beta -pull -push"},
+               del_pre=True,
+               allow_channels=False)
 async def check_update(message: Message):
     """ check or do updates """
     await message.edit("`Checking for updates, please wait....`")
@@ -48,11 +50,6 @@ async def check_update(message: Message):
         flags.remove("push")
     if len(flags) == 1:
         branch = flags[0]
-        dev_branch = "alpha"
-        if branch == dev_branch:
-            await message.err('Can\'t update to unstable [alpha] branch. '
-                              'Please use other branches instead !')
-            return
     repo = Repo()
     if branch not in repo.branches:
         await message.err(f'invalid branch name : {branch}')
@@ -67,7 +64,7 @@ async def check_update(message: Message):
             change_log = f'**New UPDATE available for [{branch}]:\n\n📄 CHANGELOG 📄**\n\n'
             await message.edit_or_send_as_file(change_log + out, disable_web_page_preview=True)
         else:
-            await message.edit(f'**Userge is up-to-date with [{branch}]**', del_in=5)
+            await message.edit(f'**X-Userge is up-to-date with [{branch}]**', del_in=5)
         return
     if pull_from_repo:
         if out:
@@ -75,7 +72,7 @@ async def check_update(message: Message):
             await _pull_from_repo(repo, branch)
             await CHANNEL.log(f"**PULLED update from [{branch}]:\n\n📄 CHANGELOG 📄**\n\n{out}")
             if not push_to_heroku:
-                await message.edit('**Userge Successfully Updated!**\n'
+                await message.edit('**X-Userge Successfully Updated!**\n'
                                    '`Now restarting... Wait for a while!`', del_in=3)
                 asyncio.get_event_loop().create_task(userge.restart(True))
         elif push_to_heroku:
@@ -121,6 +118,7 @@ async def _push_to_heroku(msg: Message, repo: Repo, branch: str) -> None:
         await _heroku_helper(sent, repo, branch)
     except GitCommandError as g_e:
         LOG.exception(g_e)
+        await sent.err(f"{g_e}, {Config.CMD_TRIGGER}restart -h and try again!")
     else:
         await sent.edit(f"**HEROKU APP : {Config.HEROKU_APP.name} is up-to-date with [{branch}]**")
 
@@ -142,7 +140,17 @@ def _heroku_helper(sent: Message, repo: Repo, branch: str) -> None:
         if not edited or (now - start_time) > 3 or message:
             edited = True
             start_time = now
-            userge.loop.create_task(sent.try_to_edit(f"{cur_msg}\n\n{prog}"))
-
+            try:
+                loop.run_until_complete(
+                    sent.try_to_edit(f"{cur_msg}\n\n{prog}"))
+            except TypeError:
+                pass
     cur_msg = sent.text.html
-    repo.remote("heroku").push(refspec=f'{branch}:master', progress=progress, force=True)
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    try:
+        repo.remote("heroku").push(refspec=f'{branch}:master',
+                                   progress=progress,
+                                   force=True)
+    finally:
+        loop.close()
