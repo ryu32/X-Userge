@@ -27,7 +27,7 @@ async def genStrSession() -> None:  # pylint: disable=missing-function-docstring
         print("\nprocessing...")
         await userge.send_message(
             "me", f"#X-USERGE #HU_STRING_SESSION\n\n```{await userge.export_session_string()}```")
-        print("Done !, session string has been sent to saved messages!")
+        print("Berhasil !, stringsessions telah di kirim di pesan tersimpan Telegram!")
 
 if __name__ == "__main__":
     asyncio.get_event_loop().run_until_complete(genStrSession())
