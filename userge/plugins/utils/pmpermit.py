@@ -369,7 +369,7 @@ if userge.has_bot:
         else:
             user_dict = await userge.get_user_dict(c_q.from_user.id)
             await c_q.edit_message_text(
-                noPmMessage.format_map(SafeDict(**user_dict)) + '\n`- Protected by userge`')
+                noPmMessage.format_map(SafeDict(**user_dict)) + '\n`🔥 Protected by X-Userge 🔥`')
             buttons = InlineKeyboardMarkup(
                 [
                     [
